@@ -77,7 +77,7 @@ float perlinNoise3D(vec3 p) {
 
 // Worley noise but make it 3D
 float worleyNoise3D(vec3 pos) {
-    pos *= 34.0; // Scale the input position to adjust the cell size
+    pos *= 55.0; // Scale the input position to adjust the cell size
     vec3 posInt = floor(pos); // Integer part of the position
     vec3 posFract = fract(pos); // Fractional part of the position
     float minDist = 1.0; // Initialize the minimum distance to a very high value.
@@ -97,28 +97,32 @@ float worleyNoise3D(vec3 pos) {
     return minDist;
 }
 
+
 void main() {
-    // Base diffuse color
-    vec4 diffuseColor = u_Color;
+    float noise = worleyNoise3D(fs_Pos.xyz + u_Time * 0.01);
+    float invertedWorley = 1.0 - noise;
 
-    // Compute Worley noise value at fragment position
-    float worleyValue = worleyNoise3D(fs_Pos.xyz * u_Time * 0.01);
-
-    // Invert Worley value to highlight cell boundaries
-    float invertedWorley = 1.0 - worleyValue;
-
-    // Apply bias function to adjust contrast
     float b = 0.3; 
     float biasedWorley = bias(b, invertedWorley);
-    vec3 worleyColor = vec3(biasedWorley);
 
-    vec3 finalColor = diffuseColor.rgb * worleyColor;
+    // Compute blend factor based on height
+    float blendFactor = clamp(fs_Pos.y, 0.0, 1.0);
+    blendFactor = pow(blendFactor, 0.5); // Adjust gradient for smoother transition
 
-    // Lambertian shading
+    blendFactor += (biasedWorley - 0.5) * 0.41;
+    blendFactor = clamp(blendFactor, 0.0, 0.2);
+
+    vec4 outerColor = vec4(0.5, 0.5, 0.5, 1.0);
+    vec4 blendedColor = mix(outerColor, u_Color, step(noise, 0.881));
+
+    // Apply lighting (Lambertian shading)
     float diffuseTerm = dot(normalize(fs_Nor.xyz), normalize(fs_LightVec.xyz));
-    float ambientTerm = 0.2;
+    float ambientTerm = 0.6;
     float lightIntensity = max(diffuseTerm + ambientTerm, 0.0);
 
+    // Compute final color with lighting
+    vec4 finalColor = blendedColor * lightIntensity;
+
     // Output final color
-    out_Col = vec4(finalColor * lightIntensity, diffuseColor.a);
+    out_Col = vec4(finalColor.rgb, u_Color.a);
 }

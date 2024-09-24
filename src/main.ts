@@ -15,11 +15,23 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
-  color: [232.0, 200.0, 232.0, 0.0],
+  color: [255,186,152,0],
   frequency: 1,
   amplitude: 1,
-  height: 1
+  height: 1,
+  'Reset' : Reset,
 };
+
+const cam = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
+
+function Reset() {
+  cam.reset();
+  controls.color = [255,186,152,0];
+  controls.frequency = 1;
+  controls.amplitude = 1;
+  controls.height = 1;
+}
+  
 
 let icosphere: Icosphere;
 let prevTesselations: number = 5;
@@ -46,7 +58,8 @@ function main() {
   gui.add(controls, 'Load Scene');
   gui.add(controls, "frequency", 1, 10, 1).step(1);
   gui.add(controls, "amplitude", 1, 10, 1).step(1);
-  gui.add(controls, "height", 0, 1, 1).step(0.01);
+  gui.add(controls, "height", 1, 2, 10).step(0.01);
+  gui.add(controls, 'Reset');
   
 
 
