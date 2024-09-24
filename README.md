@@ -2,7 +2,7 @@
 
 ## Summary
 - Added sliders to change the frequency and amplitude of sine functions involved with layering FBM noise in the vertex shader
-- Added a slider to change the height of the flame in the vertex shader
+- Added another slider to change the height of the flame in the vertex shader
 - Added a background that is composed of layered simplex and FBM noise
 
 
