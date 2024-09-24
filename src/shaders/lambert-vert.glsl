@@ -22,10 +22,6 @@ out vec4 fs_Pos;
 const vec4 lightPos = vec4(5, 5, 3, 1);
 
 // From Toolbox Functions
-float bias(float b, float val) {
-    return pow(val, log(b) / log(0.5));
-}
-
 float sawtoothWave(float x, float freq, float amplitude) {
     return (x * freq - floor(x * freq)) * amplitude;
 }
@@ -99,12 +95,13 @@ void main() {
     float flameHeight = clamp(finalPos.y, 0.1, 0.7);  // Control height for taper
     float taperFactor = mix(1.0, 0.1, flameHeight);   // Narrow tip as height increases
     finalPos.x *= taperFactor;  
+    finalPos.y *= u_FlameHeight;  
     finalPos.z *= taperFactor;
 
     if (finalPos.y > 0.9) {
         float curlAmount = sin(u_Time * 0.02 + finalPos.y * 4.11) * 0.28;  
         finalPos.x += curlAmount;
-        finalPos.z += curlAmount + u_FlameHeight;
+        finalPos.z += curlAmount;
     }
 
     mat3 normalMatrix = mat3(u_ModelInvTr);

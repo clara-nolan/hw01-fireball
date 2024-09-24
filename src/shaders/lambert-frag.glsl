@@ -26,10 +26,16 @@ out vec4 out_Col; // This is the final output color that you will see on your
 
 
 // From lecture notes
+
+float bias(float b, float val) {
+    return pow(val, log(b) / log(0.5));
+}
+
 vec3 random3(vec3 p)
 {
     return fract(sin(vec3((dot(p, vec3(127.1f, 311.7f, 191.999f))))) * 43758.5453f);
 }
+
 
 float surflet3D(vec3 p, vec3 gridPoint) {
     // Compute the distance between p and the grid point along each axis, and warp it with a
@@ -71,7 +77,7 @@ float perlinNoise3D(vec3 p) {
 
 // Worley noise but make it 3D
 float worleyNoise3D(vec3 pos) {
-    pos *= 50.0; // Scale the input position to adjust the cell size
+    pos *= 34.0; // Scale the input position to adjust the cell size
     vec3 posInt = floor(pos); // Integer part of the position
     vec3 posFract = fract(pos); // Fractional part of the position
     float minDist = 1.0; // Initialize the minimum distance to a very high value.
@@ -91,22 +97,28 @@ float worleyNoise3D(vec3 pos) {
     return minDist;
 }
 
-void main()
-{
-    // Material base color (before shading)
-        vec4 diffuseColor = u_Color;
+void main() {
+    // Base diffuse color
+    vec4 diffuseColor = u_Color;
 
-        // Calculate the diffuse term for Lambert shading
-        float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
-        // Avoid negative lighting values
-        // diffuseTerm = clamp(diffuseTerm, 0, 1);
+    // Compute Worley noise value at fragment position
+    float worleyValue = worleyNoise3D(fs_Pos.xyz * u_Time * 0.01);
 
-        float ambientTerm = 0.2;
+    // Invert Worley value to highlight cell boundaries
+    float invertedWorley = 1.0 - worleyValue;
 
-        float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
-                                                            //to simulate ambient lighting. This ensures that faces that are not
-                                                            //lit by our point light are not completely black.
+    // Apply bias function to adjust contrast
+    float b = 0.3; 
+    float biasedWorley = bias(b, invertedWorley);
+    vec3 worleyColor = vec3(biasedWorley);
 
-        // Compute final shaded color
-        out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
+    vec3 finalColor = diffuseColor.rgb * worleyColor;
+
+    // Lambertian shading
+    float diffuseTerm = dot(normalize(fs_Nor.xyz), normalize(fs_LightVec.xyz));
+    float ambientTerm = 0.2;
+    float lightIntensity = max(diffuseTerm + ambientTerm, 0.0);
+
+    // Output final color
+    out_Col = vec4(finalColor * lightIntensity, diffuseColor.a);
 }
