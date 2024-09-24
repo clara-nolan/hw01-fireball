@@ -34,10 +34,14 @@ function Reset() {
   
 
 let icosphere: Icosphere;
+let square: Square;
 let prevTesselations: number = 5;
 let time: number = 0;
 
 function loadScene() {
+  square = new Square(vec3.fromValues(0, 0, 0));
+  square.create();
+
   icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, controls.tesselations);
   icosphere.create();
 }
@@ -82,6 +86,11 @@ function main() {
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
   gl.enable(gl.DEPTH_TEST);
 
+    const flat = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/flat-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/flat-frag.glsl')),
+  ]);
+
   const lambert = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
@@ -116,6 +125,11 @@ function main() {
       icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
       icosphere.create();
     }
+
+    renderer.render(camera, flat, [
+      square,
+    ]);
+
     renderer.render(camera, lambert, [
       icosphere,
     ]);
